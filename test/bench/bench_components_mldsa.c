@@ -80,6 +80,8 @@ static int bench(void)
         mld_polyvec_matrix_pointwise_montgomery(&polyveck_out, &polymat,
                                                 &polyvecl_b))
 
+  BENCH("poly_caddq", mld_poly_caddq((mld_poly *)data0));
+
   return 0;
 }
 
