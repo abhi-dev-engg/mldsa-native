@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../mldsa/src/poly.h"
+#include "../../mldsa/src/poly_kl.h"
 #include "../../mldsa/src/polyvec.h"
 #include "../../mldsa/src/randombytes.h"
 #include "hal.h"
@@ -60,6 +61,7 @@ static int cmp_uint64_t(const void *a, const void *b)
 static int bench(void)
 {
   MLD_ALIGN int32_t data0[256];
+  MLD_ALIGN int32_t data1[256];
   MLD_ALIGN mld_poly poly_out;
   MLD_ALIGN mld_polyvecl polyvecl_a, polyvecl_b;
   MLD_ALIGN mld_polyveck polyveck_out;
@@ -79,6 +81,9 @@ static int bench(void)
   BENCH("polyvec_matrix_pointwise_montgomery",
         mld_polyvec_matrix_pointwise_montgomery(&polyveck_out, &polymat,
                                                 &polyvecl_b))
+
+  BENCH("poly_use_hint",
+        mld_poly_use_hint(&poly_out, (mld_poly *)data0, (mld_poly *)data1));
 
   return 0;
 }
