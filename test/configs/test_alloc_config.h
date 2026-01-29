@@ -30,7 +30,6 @@
  *
  * This configuration differs from the default mldsa/mldsa_native_config.h in
  * the following places:
- *   - MLD_CONFIG_NAMESPACE_PREFIX
  *   - MLD_CONFIG_CONTEXT_PARAMETER
  *   - MLD_CONFIG_CONTEXT_PARAMETER_TYPE
  *   - MLD_CONFIG_CUSTOM_ALLOC_FREE
@@ -91,7 +90,9 @@
  *              This can also be set using CFLAGS.
  *
  *****************************************************************************/
-#define MLD_CONFIG_NAMESPACE_PREFIX mld
+#if !defined(MLD_CONFIG_NAMESPACE_PREFIX)
+#define MLD_CONFIG_NAMESPACE_PREFIX MLD_DEFAULT_NAMESPACE_PREFIX
+#endif
 
 /******************************************************************************
  * Name:        MLD_CONFIG_MULTILEVEL_BUILD

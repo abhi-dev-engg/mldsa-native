@@ -9,8 +9,10 @@
 
 /* Expose declaration of allocator (normally internal) */
 #define MLD_BUILD_INTERNAL
-#include "../../mldsa/mldsa_native.h"
 #include "../../mldsa/src/common.h"
+
+#define MLD_CHECK_APIS
+#include "../../mldsa/src/sign.h"
 #include "../notrandombytes/notrandombytes.h"
 
 /*
@@ -332,7 +334,7 @@ static int test_keygen_alloc_failure(test_ctx_t *ctx)
   uint8_t pk[CRYPTO_PUBLICKEYBYTES];
   uint8_t sk[CRYPTO_SECRETKEYBYTES];
 
-  TEST_ALLOC_FAILURE("mld_keypair", mld_keypair(pk, sk, ctx),
+  TEST_ALLOC_FAILURE("mld_sign_keypair", mld_sign_keypair(pk, sk, ctx),
                      MLD_TOTAL_ALLOC_KEYPAIR, &ctx->global_high_mark_keypair);
   return 0;
 }
@@ -348,16 +350,17 @@ static int test_sign_alloc_failure(test_ctx_t *ctx)
 
   /* Generate valid keypair first */
   reset_all(ctx);
-  if (mld_keypair(pk, sk, ctx) != 0)
+  if (mld_sign_keypair(pk, sk, ctx) != 0)
   {
-    fprintf(stderr, "ERROR: mld_keypair failed in sign test setup\n");
+    fprintf(stderr, "ERROR: mld_sign_keypair failed in sign test setup\n");
     return 1;
   }
 
-  TEST_ALLOC_FAILURE("mld_signature",
-                     mld_signature(sig, &siglen, msg, sizeof(msg), sign_ctx,
-                                   sizeof(sign_ctx) - 1, sk, ctx),
-                     MLD_TOTAL_ALLOC_SIGN, &ctx->global_high_mark_sign);
+  TEST_ALLOC_FAILURE(
+      "mld_sign_signature",
+      mld_sign_signature(sig, &siglen, msg, sizeof(msg), sign_ctx,
+                         sizeof(sign_ctx) - 1, sk, ctx),
+      MLD_TOTAL_ALLOC_SIGN, &ctx->global_high_mark_sign);
   return 0;
 }
 
@@ -372,22 +375,22 @@ static int test_verify_alloc_failure(test_ctx_t *ctx)
 
   /* Generate valid keypair and signature first */
   reset_all(ctx);
-  if (mld_keypair(pk, sk, ctx) != 0)
+  if (mld_sign_keypair(pk, sk, ctx) != 0)
   {
-    fprintf(stderr, "ERROR: mld_keypair failed in verify test setup\n");
+    fprintf(stderr, "ERROR: mld_sign_keypair failed in verify test setup\n");
     return 1;
   }
 
-  if (mld_signature(sig, &siglen, msg, sizeof(msg), sign_ctx,
-                    sizeof(sign_ctx) - 1, sk, ctx) != 0)
+  if (mld_sign_signature(sig, &siglen, msg, sizeof(msg), sign_ctx,
+                         sizeof(sign_ctx) - 1, sk, ctx) != 0)
   {
-    fprintf(stderr, "ERROR: mld_signature failed in verify test setup\n");
+    fprintf(stderr, "ERROR: mld_sign_signature failed in verify test setup\n");
     return 1;
   }
 
-  TEST_ALLOC_FAILURE("mld_verify",
-                     mld_verify(sig, siglen, msg, sizeof(msg), sign_ctx,
-                                sizeof(sign_ctx) - 1, pk, ctx),
+  TEST_ALLOC_FAILURE("mld_sign_verify",
+                     mld_sign_verify(sig, siglen, msg, sizeof(msg), sign_ctx,
+                                     sizeof(sign_ctx) - 1, pk, ctx),
                      MLD_TOTAL_ALLOC_VERIFY, &ctx->global_high_mark_verify);
   return 0;
 }
@@ -402,9 +405,10 @@ static int test_sign_combined_alloc_failure(test_ctx_t *ctx)
   size_t smlen;
 
   reset_all(ctx);
-  if (mld_keypair(pk, sk, ctx) != 0)
+  if (mld_sign_keypair(pk, sk, ctx) != 0)
   {
-    fprintf(stderr, "ERROR: mld_keypair failed in sign combined test setup\n");
+    fprintf(stderr,
+            "ERROR: mld_sign_keypair failed in sign combined test setup\n");
     return 1;
   }
 
@@ -426,9 +430,9 @@ static int test_open_alloc_failure(test_ctx_t *ctx)
   size_t smlen, mlen;
 
   reset_all(ctx);
-  if (mld_keypair(pk, sk, ctx) != 0)
+  if (mld_sign_keypair(pk, sk, ctx) != 0)
   {
-    fprintf(stderr, "ERROR: mld_keypair failed in open test setup\n");
+    fprintf(stderr, "ERROR: mld_sign_keypair failed in open test setup\n");
     return 1;
   }
 
@@ -439,9 +443,9 @@ static int test_open_alloc_failure(test_ctx_t *ctx)
     return 1;
   }
 
-  TEST_ALLOC_FAILURE("mld_open",
-                     mld_open(msg_out, &mlen, sm, smlen, sign_ctx,
-                              sizeof(sign_ctx) - 1, pk, ctx),
+  TEST_ALLOC_FAILURE("mld_sign_open",
+                     mld_sign_open(msg_out, &mlen, sm, smlen, sign_ctx,
+                                   sizeof(sign_ctx) - 1, pk, ctx),
                      MLD_TOTAL_ALLOC_VERIFY, &ctx->global_high_mark_verify);
   return 0;
 }
@@ -455,15 +459,15 @@ static int test_signature_extmu_alloc_failure(test_ctx_t *ctx)
   size_t siglen;
 
   reset_all(ctx);
-  if (mld_keypair(pk, sk, ctx) != 0)
+  if (mld_sign_keypair(pk, sk, ctx) != 0)
   {
     fprintf(stderr,
-            "ERROR: mld_keypair failed in signature_extmu test setup\n");
+            "ERROR: mld_sign_keypair failed in signature_extmu test setup\n");
     return 1;
   }
 
-  TEST_ALLOC_FAILURE("mld_signature_extmu",
-                     mld_signature_extmu(sig, &siglen, mu, sk, ctx),
+  TEST_ALLOC_FAILURE("mld_sign_signature_extmu",
+                     mld_sign_signature_extmu(sig, &siglen, mu, sk, ctx),
                      MLD_TOTAL_ALLOC_SIGN, &ctx->global_high_mark_sign);
   return 0;
 }
@@ -477,21 +481,23 @@ static int test_verify_extmu_alloc_failure(test_ctx_t *ctx)
   size_t siglen;
 
   reset_all(ctx);
-  if (mld_keypair(pk, sk, ctx) != 0)
-  {
-    fprintf(stderr, "ERROR: mld_keypair failed in verify_extmu test setup\n");
-    return 1;
-  }
-
-  if (mld_signature_extmu(sig, &siglen, mu, sk, ctx) != 0)
+  if (mld_sign_keypair(pk, sk, ctx) != 0)
   {
     fprintf(stderr,
-            "ERROR: mld_signature_extmu failed in verify_extmu test setup\n");
+            "ERROR: mld_sign_keypair failed in verify_extmu test setup\n");
     return 1;
   }
 
-  TEST_ALLOC_FAILURE("mld_verify_extmu",
-                     mld_verify_extmu(sig, siglen, mu, pk, ctx),
+  if (mld_sign_signature_extmu(sig, &siglen, mu, sk, ctx) != 0)
+  {
+    fprintf(
+        stderr,
+        "ERROR: mld_sign_signature_extmu failed in verify_extmu test setup\n");
+    return 1;
+  }
+
+  TEST_ALLOC_FAILURE("mld_sign_verify_extmu",
+                     mld_sign_verify_extmu(sig, siglen, mu, pk, ctx),
                      MLD_TOTAL_ALLOC_VERIFY, &ctx->global_high_mark_verify);
   return 0;
 }
@@ -507,19 +513,20 @@ static int test_signature_pre_hash_shake256_alloc_failure(test_ctx_t *ctx)
   size_t siglen;
 
   reset_all(ctx);
-  if (mld_keypair(pk, sk, ctx) != 0)
+  if (mld_sign_keypair(pk, sk, ctx) != 0)
   {
-    fprintf(stderr,
-            "ERROR: mld_keypair failed in signature_pre_hash_shake256 test "
-            "setup\n");
+    fprintf(
+        stderr,
+        "ERROR: mld_sign_keypair failed in signature_pre_hash_shake256 test "
+        "setup\n");
     return 1;
   }
 
-  TEST_ALLOC_FAILURE(
-      "mld_signature_pre_hash_shake256",
-      mld_signature_pre_hash_shake256(sig, &siglen, msg, sizeof(msg), sign_ctx,
-                                      sizeof(sign_ctx) - 1, rnd, sk, ctx),
-      MLD_TOTAL_ALLOC_SIGN, &ctx->global_high_mark_sign);
+  TEST_ALLOC_FAILURE("mld_sign_signature_pre_hash_shake256",
+                     mld_sign_signature_pre_hash_shake256(
+                         sig, &siglen, msg, sizeof(msg), sign_ctx,
+                         sizeof(sign_ctx) - 1, rnd, sk, ctx),
+                     MLD_TOTAL_ALLOC_SIGN, &ctx->global_high_mark_sign);
   return 0;
 }
 
@@ -534,27 +541,28 @@ static int test_verify_pre_hash_shake256_alloc_failure(test_ctx_t *ctx)
   size_t siglen;
 
   reset_all(ctx);
-  if (mld_keypair(pk, sk, ctx) != 0)
+  if (mld_sign_keypair(pk, sk, ctx) != 0)
   {
     fprintf(stderr,
-            "ERROR: mld_keypair failed in verify_pre_hash_shake256 test "
+            "ERROR: mld_sign_keypair failed in verify_pre_hash_shake256 test "
             "setup\n");
     return 1;
   }
 
-  if (mld_signature_pre_hash_shake256(sig, &siglen, msg, sizeof(msg), sign_ctx,
-                                      sizeof(sign_ctx) - 1, rnd, sk, ctx) != 0)
+  if (mld_sign_signature_pre_hash_shake256(sig, &siglen, msg, sizeof(msg),
+                                           sign_ctx, sizeof(sign_ctx) - 1, rnd,
+                                           sk, ctx) != 0)
   {
     fprintf(stderr,
-            "ERROR: mld_signature_pre_hash_shake256 failed in "
+            "ERROR: mld_sign_signature_pre_hash_shake256 failed in "
             "verify_pre_hash_shake256 test setup\n");
     return 1;
   }
 
   TEST_ALLOC_FAILURE(
-      "mld_verify_pre_hash_shake256",
-      mld_verify_pre_hash_shake256(sig, siglen, msg, sizeof(msg), sign_ctx,
-                                   sizeof(sign_ctx) - 1, pk, ctx),
+      "mld_sign_verify_pre_hash_shake256",
+      mld_sign_verify_pre_hash_shake256(sig, siglen, msg, sizeof(msg), sign_ctx,
+                                        sizeof(sign_ctx) - 1, pk, ctx),
       MLD_TOTAL_ALLOC_VERIFY, &ctx->global_high_mark_verify);
   return 0;
 }
@@ -565,13 +573,14 @@ static int test_pk_from_sk_alloc_failure(test_ctx_t *ctx)
   uint8_t sk[CRYPTO_SECRETKEYBYTES];
 
   reset_all(ctx);
-  if (mld_keypair(pk, sk, ctx) != 0)
+  if (mld_sign_keypair(pk, sk, ctx) != 0)
   {
-    fprintf(stderr, "ERROR: mld_keypair failed in pk_from_sk test setup\n");
+    fprintf(stderr,
+            "ERROR: mld_sign_keypair failed in pk_from_sk test setup\n");
     return 1;
   }
 
-  TEST_ALLOC_FAILURE("mld_pk_from_sk", mld_pk_from_sk(pk, sk, ctx),
+  TEST_ALLOC_FAILURE("mld_sign_pk_from_sk", mld_sign_pk_from_sk(pk, sk, ctx),
                      MLD_TOTAL_ALLOC_KEYPAIR, &ctx->global_high_mark_keypair);
   return 0;
 }

@@ -416,7 +416,6 @@ configs:
   - path: test/configs/test_alloc_config.h
     description: "Using custom allocation that can be made fail at specific invocation"
     defines:
-      MLD_CONFIG_NAMESPACE_PREFIX: mld
       MLD_CONFIG_CONTEXT_PARAMETER: true
       MLD_CONFIG_CONTEXT_PARAMETER_TYPE: struct test_ctx_t *
       MLD_CONFIG_CUSTOM_ALLOC_FREE:

@@ -6,7 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mldsa_native.h"
+#define MLD_CHECK_APIS
+#include "src/sign.h"
+
 
 static void test_keygen_only(void)
 {
@@ -15,7 +17,7 @@ static void test_keygen_only(void)
 
   /* Only call keypair - this is what we're measuring */
   /* Uses the notrandombytes implementation for deterministic randomness */
-  int ret = crypto_sign_keypair(pk, sk);
+  int ret = mld_sign_keypair(pk, sk, NULL);
   (void)ret; /* Ignore return value - we only care about stack measurement */
 }
 
@@ -29,8 +31,8 @@ static void test_sign_only(void)
 
   /* Only call signature - this is what we're measuring */
   /* sk is zero-initialized (invalid key, but OK for stack measurement) */
-  int ret = crypto_sign_signature(sig, &siglen, msg, sizeof(msg) - 1, ctx,
-                                  sizeof(ctx) - 1, sk);
+  int ret = mld_sign_signature(sig, &siglen, msg, sizeof(msg) - 1, ctx,
+                               sizeof(ctx) - 1, sk, NULL);
   (void)ret; /* Ignore return value - we only care about stack measurement */
 }
 
@@ -43,8 +45,8 @@ static void test_verify_only(void)
 
   /* Only call verify - this is what we're measuring */
   /* pk and sig are zero-initialized (invalid, but OK for stack measurement) */
-  int ret = crypto_sign_verify(sig, CRYPTO_BYTES, msg, sizeof(msg) - 1, ctx,
-                               sizeof(ctx) - 1, pk);
+  int ret = mld_sign_verify(sig, CRYPTO_BYTES, msg, sizeof(msg) - 1, ctx,
+                            sizeof(ctx) - 1, pk, NULL);
   (void)ret; /* Ignore return value - we only care about stack measurement */
 }
 
