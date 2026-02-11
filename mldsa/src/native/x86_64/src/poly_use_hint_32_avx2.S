@@ -75,12 +75,12 @@ Lmld_poly_use_hint_32_avx2_loop:
         vmovdqa	(%rsi,%rax), %ymm0
         vmovdqa	(%rdx,%rax), %ymm2
         vpaddd	%ymm0, %ymm5, %ymm1
-        vpcmpgtd	%ymm4, %ymm0, %ymm11
         vpsrld	$0x7, %ymm1, %ymm1
         vpmulhuw	%ymm8, %ymm1, %ymm1
         vpmulhrsw	%ymm7, %ymm1, %ymm1
-        vpslld	$0xa, %ymm1, %ymm10
+        vpcmpgtd	%ymm4, %ymm0, %ymm11
         vpandn	%ymm1, %ymm11, %ymm9
+        vpslld	$0xa, %ymm1, %ymm10
         vpsubd	%ymm1, %ymm10, %ymm1
         vpslld	$0x9, %ymm1, %ymm1
         vpsubd	%ymm1, %ymm0, %ymm0
